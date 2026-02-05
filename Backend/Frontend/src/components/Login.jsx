@@ -123,12 +123,13 @@
 // export default Login;
 
 
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../context/AuthProvider";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import api from "../utils/axios";
+import api from "../axiosConfig"; // make sure this path matches your folder structure
 
 function Login() {
   const [authUser, setAuthUser] = useAuth();
@@ -189,13 +190,14 @@ function Login() {
             type="email"
             className="grow"
             placeholder="Email"
-            {...register("email", { required: true })}
+            autoComplete="email"
+            {...register("email", { required: "Email is required" })}
           />
         </label>
 
         {errors.email && (
           <span className="text-red-500 text-sm font-semibold">
-            Email is required
+            {errors.email.message}
           </span>
         )}
 
@@ -219,13 +221,13 @@ function Login() {
             className="grow"
             placeholder="Password"
             autoComplete="current-password"
-            {...register("password", { required: true })}
+            {...register("password", { required: "Password is required" })}
           />
         </label>
 
         {errors.password && (
           <span className="text-red-500 text-sm font-semibold">
-            Password is required
+            {errors.password.message}
           </span>
         )}
 
