@@ -37,12 +37,14 @@
 
 
 
+
 import { Server } from "socket.io";
 
 const users = {}; // { userId: socketId }
+let io;
 
 export const initSocket = (server) => {
-  const io = new Server(server, {
+  io = new Server(server, {
     cors: {
       origin: [
         "http://localhost:5173",
@@ -54,9 +56,6 @@ export const initSocket = (server) => {
     },
   });
 
-  // Helper to get socketId by userId
-  export const getReceiverSocketId = (receiverId) => users[receiverId];
-
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
@@ -67,7 +66,6 @@ export const initSocket = (server) => {
       io.emit("getOnlineUsers", Object.keys(users));
     }
 
-    // Manual logout
     socket.on("logout", (userId) => {
       if (users[userId]) {
         delete users[userId];
@@ -76,7 +74,6 @@ export const initSocket = (server) => {
       }
     });
 
-    // Socket disconnect
     socket.on("disconnect", () => {
       if (userId) {
         delete users[userId];
@@ -88,4 +85,7 @@ export const initSocket = (server) => {
 
   return io;
 };
+
+export const getReceiverSocketId = (receiverId) => users[receiverId];
+export { io };
 
