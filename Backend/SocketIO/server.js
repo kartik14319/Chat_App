@@ -36,13 +36,13 @@
 // });
 
 
+
 import { Server } from "socket.io";
 
-let io;
-const users = {};
+const users = {}; // { userId: socketId }
 
 export const initSocket = (server) => {
-  io = new Server(server, {
+  const io = new Server(server, {
     cors: {
       origin: [
         "http://localhost:5173",
@@ -54,23 +54,38 @@ export const initSocket = (server) => {
     },
   });
 
+  // Helper to get socketId by userId
+  export const getReceiverSocketId = (receiverId) => users[receiverId];
+
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
+
     const userId = socket.handshake.query.userId;
     if (userId) {
       users[userId] = socket.id;
       console.log("Online users:", users);
+      io.emit("getOnlineUsers", Object.keys(users));
     }
 
-    io.emit("getOnlineUsers", Object.keys(users));
+    // Manual logout
+    socket.on("logout", (userId) => {
+      if (users[userId]) {
+        delete users[userId];
+        io.emit("getOnlineUsers", Object.keys(users));
+        console.log(`${userId} logged out`);
+      }
+    });
 
+    // Socket disconnect
     socket.on("disconnect", () => {
-      console.log("User disconnected:", socket.id);
-      if (userId) delete users[userId];
-      io.emit("getOnlineUsers", Object.keys(users));
+      if (userId) {
+        delete users[userId];
+        io.emit("getOnlineUsers", Object.keys(users));
+        console.log(`${userId} disconnected`);
+      }
     });
   });
+
+  return io;
 };
 
-export const getReceiverSocketId = (receiverId) => users[receiverId];
-export const getIO = () => io;

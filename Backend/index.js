@@ -60,6 +60,70 @@
 
 
 
+// import express from "express";
+// import dotenv from "dotenv";
+// import mongoose from "mongoose";
+// import cookieParser from "cookie-parser";
+// import cors from "cors";
+// import path from "path";
+// import { createServer } from "http";
+
+// import userRoute from "./routes/user.route.js";
+// import messageRoute from "./routes/message.route.js";
+// import { initSocket } from "./SocketIO/server.js";
+
+// dotenv.config();
+
+// const app = express();
+// const server = createServer(app);
+
+// // ---------------- MIDDLEWARE ----------------
+// app.use(express.json());
+// app.use(cookieParser());
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:5173",
+//       "http://localhost:3001",
+//       "https://chat-app-kartik143.onrender.com",
+//     ],
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//   })
+// );
+
+// // ---------------- MONGODB ----------------
+// const URI = process.env.MONGO_DB_URL;
+// mongoose
+//   .connect(URI)
+//   .then(() => console.log("Connected to MongoDB"))
+//   .catch(console.error);
+
+// // ---------------- ROUTES ----------------
+// app.use("/api/user", userRoute);
+// app.use("/api/message", messageRoute);
+
+// // ---------------- SOCKET.IO ----------------
+// initSocket(server);
+
+// // ---------------- PRODUCTION ----------------
+// if (process.env.NODE_ENV === "production") {
+//   const dirPath = path.resolve();
+//   app.use(express.static(path.join(dirPath, "Frontend/dist")));
+
+//   app.get("/*splat", (req, res) => {
+//     res.sendFile(path.resolve(dirPath, "Frontend/dist", "index.html"));
+//   });
+// }
+
+// // ---------------- START SERVER ----------------
+// const PORT = process.env.PORT || 4002;
+// server.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
+
+
+
 import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
@@ -77,9 +141,10 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 
-// ---------------- MIDDLEWARE ----------------
+// Middleware
 app.use(express.json());
 app.use(cookieParser());
+
 app.use(
   cors({
     origin: [
@@ -92,33 +157,30 @@ app.use(
   })
 );
 
-// ---------------- MONGODB ----------------
-const URI = process.env.MONGO_DB_URL;
+// MongoDB connection
 mongoose
-  .connect(URI)
+  .connect(process.env.MONGO_DB_URL)
   .then(() => console.log("Connected to MongoDB"))
   .catch(console.error);
 
-// ---------------- ROUTES ----------------
+// Routes
 app.use("/api/user", userRoute);
 app.use("/api/message", messageRoute);
 
-// ---------------- SOCKET.IO ----------------
-initSocket(server);
-
-// ---------------- PRODUCTION ----------------
+// Production build
 if (process.env.NODE_ENV === "production") {
   const dirPath = path.resolve();
   app.use(express.static(path.join(dirPath, "Frontend/dist")));
 
+  // Catch-all route for React
   app.get("/*splat", (req, res) => {
     res.sendFile(path.resolve(dirPath, "Frontend/dist", "index.html"));
   });
 }
 
-// ---------------- START SERVER ----------------
-const PORT = process.env.PORT || 4002;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Initialize Socket.IO
+initSocket(server);
 
+// Start server
+const PORT = process.env.PORT || 4002;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
