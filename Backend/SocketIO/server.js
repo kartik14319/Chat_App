@@ -38,10 +38,11 @@
 
 
 
+// Backend/SocketIO/server.js
 import { Server } from "socket.io";
 
 const users = {}; // { userId: socketId }
-export let io;  // top-level export
+export let io;    // top-level export for other modules
 
 export const initSocket = (server) => {
   io = new Server(server, {
@@ -62,10 +63,11 @@ export const initSocket = (server) => {
     const userId = socket.handshake.query.userId;
     if (userId) {
       users[userId] = socket.id;
-      console.log("Online users:", users);
       io.emit("getOnlineUsers", Object.keys(users));
+      console.log("Online users:", Object.keys(users));
     }
 
+    // Logout event
     socket.on("logout", (userId) => {
       if (users[userId]) {
         delete users[userId];
@@ -74,8 +76,9 @@ export const initSocket = (server) => {
       }
     });
 
+    // Socket disconnect
     socket.on("disconnect", () => {
-      if (userId) {
+      if (userId && users[userId]) {
         delete users[userId];
         io.emit("getOnlineUsers", Object.keys(users));
         console.log(`${userId} disconnected`);
@@ -86,6 +89,5 @@ export const initSocket = (server) => {
   return io;
 };
 
+// Helper to get socketId by userId
 export const getReceiverSocketId = (receiverId) => users[receiverId];
-export { io };
-

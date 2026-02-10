@@ -56,16 +56,19 @@
 
 
 
+// Backend/controller/message.controller.js
 import { getReceiverSocketId, io } from "../SocketIO/server.js";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 
+// Send a message
 export const sendMessage = async (req, res) => {
   try {
     const { message } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
+    // Find or create conversation
     let conversation = await Conversation.findOne({
       members: { $all: [senderId, receiverId] },
     });
@@ -76,6 +79,7 @@ export const sendMessage = async (req, res) => {
       });
     }
 
+    // Create new message
     const newMessage = new Message({
       senderId,
       receiverId,
@@ -85,18 +89,20 @@ export const sendMessage = async (req, res) => {
     conversation.messages.push(newMessage._id);
     await Promise.all([conversation.save(), newMessage.save()]);
 
+    // Emit message to receiver if online
     const receiverSocketId = getReceiverSocketId(receiverId);
-    if (receiverSocketId) {
-      getIO().to(receiverSocketId).emit("newMessage", newMessage);
+    if (receiverSocketId && io) {
+      io.to(receiverSocketId).emit("newMessage", newMessage);
     }
 
     res.status(201).json(newMessage);
   } catch (error) {
-    console.error("Error in sendMessage", error);
+    console.error("Error in sendMessage:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
+// Get all messages between logged-in user and chatUser
 export const getMessage = async (req, res) => {
   try {
     const { id: chatUser } = req.params;
@@ -110,7 +116,7 @@ export const getMessage = async (req, res) => {
 
     res.status(200).json(conversation.messages);
   } catch (error) {
-    console.error("Error in getMessage", error);
+    console.error("Error in getMessage:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
